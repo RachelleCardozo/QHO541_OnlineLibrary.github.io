@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Web App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="index-page">
+    <nav>
+        <h2>Library Web App</h2>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="books.html">Books</a></li>
+            <li><a href="account.html">Account</a></li>
+            <li><a href="submit-query.html">Submit Query</a></li>
+            <li><a href="about.html">About Us</a></li>
+            <li><a href="#" id="logout-button">Logout</a></li>
+        </ul>
+    </nav>
+    <div id="content">
+        <h1>Welcome to the Library Web App</h1>
+        <p id="user-greeting"></p> <!-- User greeting element -->
+        <p>Your one-stop solution for managing your favorite books and comments.</p>
+        <h2>Your Favorite Books</h2>
+        <div id="user-favorites"></div>
+        <h2>Your Comments</h2>
+        <div id="user-comments"></div>
+    </div>
+    <script>
+        // Redirect to login page if not authenticated
+        if (!localStorage.getItem('token')) {
+            alert('You must be logged in to access this page.');
+            window.location.href = 'login.html';
+        }
+
+        // Display username in greeting
+        const username = localStorage.getItem('username');
+        if (username) {
+            document.getElementById('user-greeting').textContent = `Hello, ${username}!`;
+        } else {
+            document.getElementById('user-greeting').textContent = `Hello, Guest!`;
+        }
+
+        // Logout functionality
+        document.getElementById('logout-button').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userId');
+            alert('You have been logged out.');
+            window.location.href = 'login.html';
+        });
+
+        // Fetch user data (comments and favorites)
+        const fetchUserData = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch('/api/users/me', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const user = await res.json();
+                console.log('Fetched user data:', user); // Log the fetched user data
+
+                // Display user's favorite books
+                const userFavorites = document.getElementById('user-favorites');
+                userFavorites.innerHTML = ''; // Clear existing content
+                user.favourites.forEach(book => {
+                    const favoriteItem = document.createElement('div');
+                    favoriteItem.setAttribute('data-book-id', book._id); // Set data-book-id attribute
+                    favoriteItem.innerHTML = `
+                        <h3>${book.title}</h3>
+                        <p>Author:${book.authors}</p>
+                        <button onclick="removeFavorite('${book._id}')">Remove from Favorites</button>
+                        <button onclick="readBook('${book._id}')">Read</button>
+                    `;
+                    userFavorites.appendChild(favoriteItem);
+                });
+
+                // Display user's comments
+                const userComments = document.getElementById('user-comments');
+                userComments.innerHTML = ''; // Clear existing content
+                user.comments.forEach(comment => {
+                    const commentItem = document.createElement('div');
+                    commentItem.setAttribute('data-comment-id', comment._id); // Set data-comment-id attribute
+                    commentItem.innerHTML = `
+                        <p>${comment.text} on <strong>${comment.book.title}</strong></p>
+                        <button onclick="deleteComment('${comment.book._id}', '${comment._id}')">Delete Comment</button>
+                    `;
+                    userComments.appendChild(commentItem);
+                });
+            } catch (err) {
+                console.error('Error fetching user data:', err);
+                alert('An error occurred while fetching user data');
+            }
+        };
+
+        // Remove favorite book
+        const removeFavorite = async (bookId) => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`/api/books/${bookId}/favorite`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (res.ok) {
+                    alert('Book removed from favorites');
+                    document.getElementById('user-favorites').removeChild(document.querySelector(`[data-book-id="${bookId}"]`)); // Remove the favorite book element
+                } else {
+                    const data = await res.json();
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (err) {
+                console.error('Error removing favorite:', err);
+            }
+        };
+
+        // Read book
+        const readBook = (bookId) => {
+            alert('Reading book: ' + bookId); // Implement your book reading logic here
+        };
+
+        // Delete comment from book
+        const deleteComment = async (bookId, commentId) => {
+            console.log(`Deleting comment ${commentId} from book ${bookId}`); // Add console log
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`/api/books/${bookId}/comments/${commentId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (res.ok) {
+                    alert('Comment deleted');
+                    document.getElementById('user-comments').removeChild(document.querySelector(`[data-comment-id="${commentId}"]`)); // Remove the comment element
+                } else {
+                    const data = await res.json();
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (err) {
+                console.error('Error deleting comment:', err);
+            }
+        };
+
+        fetchUserData();
+    </script>
+</body>
+</html>

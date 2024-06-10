@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Query</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="submit-query-page">
+    <nav>
+        <h2>Library Web App</h2>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="books.html">Books</a></li>
+            <li><a href="account.html">Account</a></li>
+            <li><a href="about.html">About Us</a></li>
+            <li><a href="#" id="logout-button">Logout</a></li>
+        </ul>
+    </nav>
+    <div id="content">
+        <h1>Submit a Query</h1>
+        <form id="query-form">
+            <label for="query-text">Your Query:</label>
+            <textarea id="query-text" name="query-text" required></textarea>
+            <button type="submit">Submit Query</button>
+        </form>
+    </div>
+    <script src="scripts.js"></script>
+    <script>
+        // Logout functionality
+        document.getElementById('logout-button').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userId');
+            alert('You have been logged out.');
+            window.location.href = 'login.html';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="about-page">
+    <nav>
+        <h2>Library Web App</h2>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="books.html">Books</a></li>
+            <li><a href="account.html">Account</a></li>
+            <li><a href="submit-query.html">Submit Query</a></li>
+            <li><a href="#" id="logout-button">Logout</a></li>
+        </ul>
+    </nav>
+    <div id="content">
+        <h1>About Us</h1>
+        <p>Welcome to the Library Web App!</p>
+        <p>Our mission is to provide an easy-to-use platform for managing your favorite books and comments.</p>
+        <p>We aim to create a community of book lovers who can share their thoughts and reviews on various books.</p>
+        <p>For any queries or support, feel free to contact us at support@librarywebapp.com.</p>
+    </div>
+    <script src="scripts.js"></script>
+    <script>
+        // Logout functionality
+        document.getElementById('logout-button').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userId');
+            alert('You have been logged out.');
+            window.location.href = 'login.html';
+        });
+    </script>
+</body>
+</html>

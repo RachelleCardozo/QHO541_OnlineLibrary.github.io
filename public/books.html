@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Books</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="books-page">
+    <nav>
+        <h2>Library Web App</h2>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="account.html">Account</a></li>
+            <li><a href="submit-query.html">Submit Query</a></li>
+            <li><a href="about.html">About Us</a></li>
+            <li><a href="#" id="logout-button">Logout</a></li>
+        </ul>
+    </nav>
+    <div id="categories-list">
+        <h2>Categories</h2>
+    </div>
+    <div id="books-list" style="display: none;">
+        <h2>Books</h2>
+        <input type="text" id="search-input" placeholder="Search books...">
+        <button onclick="searchBooks()">Search</button>
+        <button onclick="showCategories()">Back to Categories</button>
+        <div id="books-container"></div>
+    </div>
+    <div id="book-details" style="display: none;">
+        <h2>Book Details</h2>
+        <button onclick="showBooks()">Back to Books</button>
+        <div id="book-container"></div>
+        <button onclick="markFavorite()">Mark as Favorite</button>
+        <div>
+            <h3>Comments</h3>
+            <div id="comments-container"></div>
+            <textarea id="comment-text" placeholder="Add a comment"></textarea>
+            <button onclick="addComment()">Add Comment</button>
+        </div>
+    </div>
+    <script>
+        let currentCategory = '';
+        let currentBookId = '';
+
+        // Redirect to login page if not authenticated
+        if (!localStorage.getItem('token')) {
+            alert('You must be logged in to view the books.');
+            window.location.href = 'login.html';
+        }
+
+        // Logout functionality
+        document.getElementById('logout-button').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userId');
+            alert('You have been logged out.');
+            window.location.href = 'login.html';
+        });
+
+        // Show categories
+        const showCategories = async () => {
+            document.getElementById('categories-list').style.display = 'block';
+            document.getElementById('books-list').style.display = 'none';
+            document.getElementById('book-details').style.display = 'none';
+            const res = await fetch('/api/books/categories', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            const categories = await res.json();
+            const categoriesList = document.getElementById('categories-list');
+            categoriesList.innerHTML = '<h2>Categories</h2>';
+            categories.forEach(category => {
+                const categoryItem = document.createElement('div');
+                categoryItem.innerHTML = `<button onclick="showBooks('${category}')">${category}</button>`;
+                categoriesList.appendChild(categoryItem);
+            });
+        };
+
+        // Show books in category
+        const showBooks = async (category) => {
+            if (category) currentCategory = category;
+            document.getElementById('categories-list').style.display = 'none';
+            document.getElementById('books-list').style.display = 'block';
+            document.getElementById('book-details').style.display = 'none';
+            const res = await fetch(`/api/books?category=${currentCategory}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            const books = await res.json();
+            displayBooks(books);
+        };
+
+        // Display books
+        const displayBooks = (books) => {
+            const booksContainer = document.getElementById('books-container');
+            booksContainer.innerHTML = '';
+            books.forEach(book => {
+                const bookItem = document.createElement('div');
+                bookItem.innerHTML = `<button onclick="showBookDetails('${book._id}')">${book.title}</button>`;
+                booksContainer.appendChild(bookItem);
+            });
+        };
+
+        // Show book details
+        const showBookDetails = async (bookId) => {
+            currentBookId = bookId;
+            document.getElementById('categories-list').style.display = 'none';
+            document.getElementById('books-list').style.display = 'none';
+            document.getElementById('book-details').style.display = 'block';
+            const res = await fetch(`/api/books/${bookId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            const book = await res.json();
+            const bookContainer = document.getElementById('book-container');
+            bookContainer.innerHTML = '';
+            bookContainer.innerHTML = `
+                <h3>${book.title}</h3>
+                <p>${book.description}</p>
+                <p>Authors: ${book.authors}</p>
+                <p>Published Year: ${book.published_year}</p>
+                <p>Average Rating: ${book.average_rating}</p>
+                <p>Number of Pages: ${book.num_pages}</p>
+                <button onclick="readBook('${book._id}')">Read Book</button>
+            `;
+            const commentsContainer = document.getElementById('comments-container');
+            commentsContainer.innerHTML = book.comments.map(comment => {
+                const deleteButton = comment.user === localStorage.getItem('userId') ? `<button onclick="deleteComment('${book._id}', '${comment._id}')">Delete</button>` : '';
+                return `<p data-comment-id="${comment._id}">${comment.text} by ${comment.user.username} ${deleteButton}</p>`;
+            }).join('');
+        };
+
+        // Read book
+        const readBook = async (bookId) => {
+            alert('Reading book: ' + bookId); // Implement your book reading logic here
+        };
+
+        // Mark book as favorite
+        const markFavorite = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`/api/books/${currentBookId}/favorite`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (res.ok) {
+                    alert('Book marked as favorite');
+                } else {
+                    const data = await res.json();
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (err) {
+                console.error('Error marking book as favorite:', err);
+            }
+        };
+
+        // Add comment to book
+        const addComment = async () => {
+            const text = document.getElementById('comment-text').value;
+            if (text) {
+                try {
+                    const token = localStorage.getItem('token');
+                    const res = await fetch(`/api/books/${currentBookId}/comments`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ text })
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        alert('Comment added successfully');
+                        location.reload(); // Reload the page
+                    } else {
+                        alert(`Error: ${data.error}`);
+                    }
+                } catch (err) {
+                    console.error('Error adding comment:', err);
+                }
+            }
+        };
+
+        // Delete comment from book
+        const deleteComment = async (bookId, commentId) => {
+            console.log(`Deleting comment ${commentId} from book ${bookId}`); // Add console log
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`/api/books/${bookId}/comments/${commentId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (res.ok) {
+                    alert('Comment deleted');
+                    document.querySelector(`[data-comment-id="${commentId}"]`).remove(); // Remove the comment element
+                } else {
+                    const data = await res.json();
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (err) {
+                console.error('Error deleting comment:', err);
+            }
+        };
+
+        // Search books
+        const searchBooks = async () => {
+            const query = document.getElementById('search-input').value;
+            try {
+                const res = await fetch(`/api/books?search=${query}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const books = await res.json();
+                displayBooks(books);
+            } catch (err) {
+                console.error('Error searching books:', err);
+                alert('An error occurred while searching for books');
+            }
+        };
+
+        // Initialize categories on page load
+        showCategories();
+    </script>
+</body>
+</html>
