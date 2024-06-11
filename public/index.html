@@ -36,6 +36,7 @@
 
         // Display username in greeting
         const username = localStorage.getItem('username');
+        console.log('Retrieved username:', username);
         if (username) {
             document.getElementById('user-greeting').textContent = `Hello, ${username}!`;
         } else {
