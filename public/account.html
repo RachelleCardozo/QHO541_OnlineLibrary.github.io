@@ -19,6 +19,7 @@
     </nav>
     <div id="content">
         <h1>Account Settings</h1>
+        <p id="user-greeting"></p>
         <h2>Change Password</h2>
         <form id="change-password-form">
             <label for="current-password">Current Password:</label>
@@ -37,11 +38,46 @@
             window.location.href = 'login.html';
         }
 
+        // Display username in greeting
+        const username = localStorage.getItem('username');
+        if (username) {
+            document.getElementById('user-greeting').textContent = `Hello, ${username}!`;
+        } else {
+            document.getElementById('user-greeting').textContent = `Hello, Guest!`;
+        }
+
         // Logout functionality
         document.getElementById('logout-button').addEventListener('click', () => {
             localStorage.removeItem('token');
             alert('You have been logged out.');
             window.location.href = 'login.html';
+        });
+
+        // Delete user account
+        document.getElementById('delete-account-button').addEventListener('click', async () => {
+            if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                try {
+                    const token = localStorage.getItem('token');
+                    const res = await fetch('/api/users/delete-account', {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    if (res.ok) {
+                        alert('Account deleted successfully');
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('username');
+                        localStorage.removeItem('userId');
+                        window.location.href = 'register.html'; // Redirect to register page
+                    } else {
+                        const data = await res.json();
+                        alert(`Error: ${data.error}`);
+                    }
+                } catch (err) {
+                    console.error('Error deleting account:', err);
+                }
+            }
         });
     </script>
     <script src="scripts.js"></script>
