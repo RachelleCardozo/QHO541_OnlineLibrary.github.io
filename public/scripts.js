@@ -465,6 +465,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (res.ok) {
                         alert('Account deleted successfully');
                         localStorage.removeItem('token');
+                        localStorage.removeItem('username');
+                        localStorage.removeItem('userId');
                         window.location.href = 'register.html'; // Redirect to register page
                     } else {
                         const data = await res.json();
@@ -472,6 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } catch (err) {
                     console.error('Error deleting account:', err);
+                    alert('An error occurred while deleting the account.');
                 }
             }
         });
