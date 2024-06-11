@@ -12,7 +12,6 @@
         <ul>
             <li><a href="index.html">Home</a></li>
             <li><a href="register.html">Register</a></li>
-            <li><a href="login.html">Login</a></li>
             <li><a href="books.html">Books</a></li>
         </ul>
     </nav>
@@ -49,7 +48,6 @@
                         if (res.ok) {
                             localStorage.setItem('token', data.token);
                             localStorage.setItem('username', data.user.username); // Store username
-                            alert('Login successful');
                             window.location.href = 'index.html'; // Redirect to index page
                         } else {
                             alert(`Error: ${data.error}`);
