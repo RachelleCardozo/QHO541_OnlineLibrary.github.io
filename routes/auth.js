@@ -7,6 +7,12 @@ const auth = require('../middleware/auth');
 // Register user
 router.post('/register', async (req, res) => {
     const { username, email, password } = req.body;
+
+    // Check for minimum password length
+    if (password.length < 8) {
+        return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+    
     try {
         const existingUser = await User.findOne({ email });
         if (existingUser) {
