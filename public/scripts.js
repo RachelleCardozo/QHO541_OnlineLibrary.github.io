@@ -378,6 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
                 if (res.ok) {
                     alert('Password changed successfully');
+                    location.reload(); // Refresh the page
                 } else {
                     alert(`Error: ${data.error}`);
                 }
